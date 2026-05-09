@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ramo de Tulipanes Romántico - Edición Deluxe</title>
+    <style>
+        /* ==========================================
+           1. VARIABLES Y CONFIGURACIÓN GLOBAL
+           ========================================== */
+        :root {
+            --bg-night-1: #05021a;
+            --bg-night-2: #0f0c31;
+            --bg-night-3: #2b1b54;
+            --moon-glow: rgba(255, 255, 230, 0.5);
+            --stem-grad: linear-gradient(to top, #0d2e16, #266b37);
+            --leaf-grad: linear-gradient(135deg, #1e5c2d, #3da856);
+            --stigma-glow: rgba(255, 235, 150, 0.9);
+            
+            /* Factor de escala fluido responsivo */
+            --scale-factor: 1; 
+        }
+
+        @media (max-width: 1200px) { :root { --scale-factor: 0.9; } }
+        @media (max-width: 900px)  { :root { --scale-factor: 0.8; } }
+        @media (max-width: 600px)  { :root { --scale-factor: 0.65; } }
+        @media (max-width: 400px)  { :root { --scale-factor: 0.55; } }
+        @media (max-height: 700px) { :root { --scale-factor: 0.7; } }
+        @media (max-height: 550px) { :root { --scale-factor: 0.55; } }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--bg-night-1) 0%, var(--bg-night-2) 50%, var(--bg-night-3) 100%);
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* ==========================================
+           2. PANTALLA DE INICIO Y BOTÓN ANIMADO
+           ========================================== */
+        #start-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, rgba(15, 12, 49, 0.8) 0%, rgba(5, 2, 26, 0.98) 100%);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 100; padding: 20px;
+            transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1), transform 1s cubic-bezier(0.4, 0, 0.2, 1), visibility 1s;
+        }
+
+        #start-screen.hidden {
+            opacity: 0; transform: scale(1.15);
+            visibility: hidden; pointer-events: none;
+        }
+
+        .intro-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 40px 30px; border-radius: 24px; text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.05);
+            width: 100%; max-width: 420px;
+            animation: floatCard 6s ease-in-out infinite alternate;
+        }
+
+        @keyframes floatCard {
+            0% { transform: translateY(-5px); }
+            100% { transform: translateY(5px); }
+        }
+
+        .intro-card h1 {
+            color: #ffffff; font-size: clamp(1.8rem, 5vw, 2.4rem);
+            margin-bottom: 15px; font-weight: 300; letter-spacing: 1px;
+            text-shadow: 0 2px 10px rgba(255, 78, 140, 0.3);
+        }
+
+        .intro-card p {
+            color: #e0dced; font-size: clamp(0.9rem, 3vw, 1rem);
+            margin-bottom: 30px; opacity: 0.9; line-height: 1.5;
+        }
+
+        .animated-btn {
+            background: linear-gradient(45deg, #ff3b75, #ff7ba0, #ff3b75);
+            background-size: 200% 200%; color: white; border: none;
+            padding: 15px 30px; font-size: clamp(1rem, 3vw, 1.1rem);
+            font-weight: 600; border-radius: 50px; cursor: pointer;
+            box-shadow: 0 0 20px rgba(255, 59, 117, 0.6);
+            animation: gradientShift 4s ease infinite, pulseGlow 2s infinite alternate;
+            transition: transform 0.3s ease; display: inline-flex; align-items: center; gap: 10px;
+        }
+
+        .animated-btn:hover { transform: translateY(-2px) scale(1.05); }
+        .animated-btn .heart-beat { display: inline-block; animation: heartbeat 1.2s infinite; }
+
+        @keyframes gradientShift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+        @keyframes pulseGlow { 0% { box-shadow: 0 0 15px rgba(255, 59, 117, 0.5); } 100% { box-shadow: 0 0 30px rgba(255, 59, 117, 0.9), 0 0 50px rgba(255, 59, 117, 0.4); } }
+        @keyframes heartbeat { 0%, 30%, 80%, 100% { transform: scale(1); } 15%, 45% { transform: scale(1.3); } }
+
+        /* ==========================================
+           3. CIELO, LUNA, ESTRELLAS Y ESTRELLAS FUGACES
+           ========================================== */
+        .moon {
+            position: absolute; top: 8%; right: 10%;
+            width: clamp(60px, 12vw, 100px); height: clamp(60px, 12vw, 100px);
+            background: #fffbe3; border-radius: 50%;
+            box-shadow: 0 0 40px var(--moon-glow), 0 0 80px var(--moon-glow), inset -10px 2px 15px rgba(0,0,0,0.1);
+            z-index: 1;
+        }
+
+        .stars-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+        .star { position: absolute; background-color: #ffffff; border-radius: 50%; animation: twinkle ease-in-out infinite; }
+
+        @keyframes twinkle { 0%, 100% { opacity: 0.1; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); box-shadow: 0 0 6px #fff; } }
+
+        /* NUEVO: Estrellas Fugaces */
+        .shooting-stars-container { position: absolute; top: 0; left: 0; width: 100%; height: 50%; pointer-events: none; z-index: 1; }
+        .shooting-star {
+            position: absolute; width: 120px; height: 2px;
+            background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,1));
+            opacity: 0; transform: rotate(35deg);
+            animation: shooting 14s linear infinite;
+        }
+        .shooting-star:nth-child(1) { top: 10%; left: 10%; animation-delay: 4s; }
+        .shooting-star:nth-child(2) { top: 25%; left: 50%; animation-delay: 9s; width: 160px; }
+        .shooting-star:nth-child(3) { top: 5%; left: 70%; animation-delay: 13s; }
+
+        @keyframes shooting {
+            0% { transform: rotate(35deg) translateX(-100px); opacity: 1; }
+            6% { transform: rotate(35deg) translateX(500px); opacity: 0; }
+            100% { transform: rotate(35deg) translateX(500px); opacity: 0; }
+        }
+
+        /* ==========================================
+           4. NUEVO: PANEL DE DEDICATORIA FLOTANTE
+           ========================================== */
+        .dedication-panel {
+            position: absolute; top: 8%; left: 50%;
+            transform: translate(-50%, -20px);
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            padding: 20px 30px; border-radius: 18px; text-align: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4), 0 0 15px rgba(255,255,255,0.1);
+            opacity: 0; visibility: hidden; z-index: 50;
+            transition: opacity 1.5s ease, transform 1.5s cubic-bezier(0.1, 0.9, 0.2, 1);
+            width: 90%; max-width: 450px; pointer-events: auto;
+        }
+
+        .dedication-panel.show { opacity: 1; visibility: visible; transform: translate(-50%, 0); }
+        
+        .dedication-panel h2 {
+            font-family: Georgia, serif; font-size: clamp(1.2rem, 4vw, 1.5rem);
+            color: #ffb3d9; margin-bottom: 8px; font-weight: normal; font-style: italic;
+        }
+
+        .dedication-panel p { color: #f2f2f2; font-size: clamp(0.85rem, 2.5vw, 0.95rem); line-height: 1.5; font-weight: 300; }
+
+        /* ==========================================
+           5. NUEVO: LUCIÉRNAGAS AMBIENTALES
+           ========================================== */
+        .fireflies-container { position: absolute; bottom: 0; left: 0; width: 100%; height: 60%; pointer-events: none; z-index: 3; }
+        .firefly {
+            position: absolute; width: 4px; height: 4px;
+            background-color: #e2ff54; border-radius: 50%; filter: blur(0.5px);
+            box-shadow: 0 0 6px #e2ff54, 0 0 12px #ffab00;
+            animation: drift ease-in-out infinite alternate;
+        }
+
+        @keyframes drift {
+            0% { transform: translate(0, 0) scale(0.8); opacity: 0.1; }
+            50% { opacity: 1; }
+            100% { transform: translate(40px, -60px) scale(1.2); opacity: 0.3; }
+        }
+
+        /* ==========================================
+           6. CONTENEDOR PRINCIPAL Y RAMO CON LAZO
+           ========================================== */
+        #garden-container { position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: flex-end; z-index: 2; }
+        
+        .bouquet {
+            position: absolute; bottom: -10px; display: flex; justify-content: center;
+            width: 0; height: 420px;
+            transform: translateY(200px) scale(0.2); transform-origin: bottom center; opacity: 0;
+            transition: transform 1.5s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 1.5s ease;
+        }
+
+        #garden-container.active .bouquet { transform: translateY(0) scale(var(--scale-factor)); opacity: 1; }
+
+        /* NUEVO: Lazo de Seda Dorado (Se escala junto con el ramo) */
+        /* ==========================================
+           REEMPLAZA ESTA SECCIÓN EN TU CSS
+           Lazo de Seda Dorado (Versión XL Optimizado)
+           ========================================== */
+        .ribbon-container { 
+            position: absolute; 
+            bottom: 45px; /* Subimos 10px para abrazar el centro exacto de la masa de tallos */
+            z-index: 20; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            pointer-events: none; 
+        }
+        
+        .ribbon-knot {
+            width: 32px;  /* Antes 22px */
+            height: 32px; /* Antes 22px */
+            background: linear-gradient(135deg, #ffea9f, #d4af37, #8b6508);
+            border-radius: 8px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.6); 
+            z-index: 3;
+        }
+
+        .ribbon-loop-left, .ribbon-loop-right {
+            position: absolute; 
+            width: 80px;  /* Antes 55px, bucles mucho más voluptuosos */
+            height: 45px; /* Antes 30px */
+            background: linear-gradient(to bottom, #ffea9f, #d4af37); 
+            border-radius: 50px;
+            box-shadow: inset 0 0 15px rgba(139,101,8,0.8), 0 6px 12px rgba(0,0,0,0.5); 
+            z-index: 2;
+        }
+
+        .ribbon-loop-left  { left: -65px; transform: rotate(-18deg); }
+        .ribbon-loop-right { right: -65px; transform: rotate(18deg); }
+
+        .ribbon-tail-left, .ribbon-tail-right {
+            position: absolute; 
+            width: 25px;   /* Antes 18px, caídas más anchas */
+            height: 100px; /* Antes 70px, caídas más largas y elegantes */
+            background: linear-gradient(to bottom, #d4af37, #8b6508); 
+            z-index: 1; 
+            top: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .ribbon-tail-left  { left: -26px; border-radius: 0 0 0 16px; transform: rotate(28deg); }
+        .ribbon-tail-right { right: -26px; border-radius: 0 0 16px 0; transform: rotate(-28deg); }
+        /* ==========================================
+           7. TULIPANES (15 FLORES EN ABANICO)
+           ========================================== */
+        .tulip-wrapper {
+            position: absolute; bottom: 0; display: flex; flex-direction: column; align-items: center;
+            cursor: pointer; transform-origin: bottom center; transition: filter 0.3s ease;
+            animation: bouquetSway 7s ease-in-out infinite alternate;
+        }
+
+        .tulip-wrapper:hover { filter: brightness(1.2) drop-shadow(0 0 10px rgba(255,255,255,0.3)); }
+
+        @keyframes bouquetSway { 0% { transform: rotate(calc(var(--t-rot) - 1.5deg)); } 100% { transform: rotate(calc(var(--t-rot) + 1.5deg)); } }
+
+        .tulip-wrapper:nth-child(1)  { --t-rot: -35deg; --t-height: 230px; animation-delay: 0.1s; --f-color1: #ffb3d9; --f-color2: #b81669; --heart-color: #ffb3d9; }
+        .tulip-wrapper:nth-child(2)  { --t-rot: -30deg; --t-height: 260px; animation-delay: 0.4s; --f-color1: #ff7bc1; --f-color2: #9e0d54; --heart-color: #ff7bc1; }
+        .tulip-wrapper:nth-child(3)  { --t-rot: -25deg; --t-height: 290px; animation-delay: 0.2s; --f-color1: #ffa64d; --f-color2: #b33c00; --heart-color: #ffa64d; }
+        .tulip-wrapper:nth-child(4)  { --t-rot: -20deg; --t-height: 320px; animation-delay: 0.7s; --f-color1: #ff6666; --f-color2: #990000; --heart-color: #ff6666; }
+        .tulip-wrapper:nth-child(5)  { --t-rot: -15deg; --t-height: 350px; animation-delay: 0.3s; --f-color1: #ff4d94; --f-color2: #800033; --heart-color: #ff4d94; }
+        .tulip-wrapper:nth-child(6)  { --t-rot: -10deg; --t-height: 375px; animation-delay: 0.8s; --f-color1: #e63956; --f-color2: #5c0413; --heart-color: #e63956; }
+        .tulip-wrapper:nth-child(7)  { --t-rot: -5deg;  --t-height: 395px; animation-delay: 0.5s; --f-color1: #d966ff; --f-color2: #4d0066; --heart-color: #d966ff; }
+        .tulip-wrapper:nth-child(8)  { --t-rot: 0deg;   --t-height: 410px; animation-delay: 0.0s; --f-color1: #ff3333; --f-color2: #660000; --heart-color: #ff3333; z-index: 5; }
+        .tulip-wrapper:nth-child(9)  { --t-rot: 5deg;   --t-height: 395px; animation-delay: 0.6s; --f-color1: #66ccff; --f-color2: #004466; --heart-color: #66ccff; }
+        .tulip-wrapper:nth-child(10) { --t-rot: 10deg;  --t-height: 375px; animation-delay: 0.2s; --f-color1: #33ffcc; --f-color2: #006644; --heart-color: #33ffcc; }
+        .tulip-wrapper:nth-child(11) { --t-rot: 15deg;  --t-height: 350px; animation-delay: 0.9s; --f-color1: #ff4d94; --f-color2: #800033; --heart-color: #ff4d94; }
+        .tulip-wrapper:nth-child(12) { --t-rot: 20deg;  --t-height: 320px; animation-delay: 0.4s; --f-color1: #ffcc00; --f-color2: #806600; --heart-color: #ffcc00; }
+        .tulip-wrapper:nth-child(13) { --t-rot: 25deg;  --t-height: 290px; animation-delay: 0.7s; --f-color1: #ff8533; --f-color2: #993300; --heart-color: #ff8533; }
+        .tulip-wrapper:nth-child(14) { --t-rot: 30deg;  --t-height: 260px; animation-delay: 0.3s; --f-color1: #ff7bc1; --f-color2: #9e0d54; --heart-color: #ff7bc1; }
+        .tulip-wrapper:nth-child(15) { --t-rot: 35deg;  --t-height: 230px; animation-delay: 0.8s; --f-color1: #ffb3d9; --f-color2: #b81669; --heart-color: #ffb3d9; }
+
+        .tulip-wrapper { margin-left: -25px; width: 50px; }
+
+        .stem {
+            width: 8px; height: var(--t-height); background: var(--stem-grad);
+            position: relative; border-radius: 4px 4px 0 0; box-shadow: inset -2px 0 4px rgba(0,0,0,0.4);
+        }
+
+        .leaf { position: absolute; background: var(--leaf-grad); box-shadow: inset 2px 2px 3px rgba(255,255,255,0.15), inset -2px -2px 5px rgba(0,0,0,0.5); z-index: 1; }
+        .leaf-left  { width: 22px; height: 75px; bottom: 42%; left: -18px; border-radius: 100% 0% 100% 10%; transform-origin: bottom right; transform: rotate(-15deg); }
+        .leaf-right { width: 20px; height: 65px; bottom: 52%; right: -16px; border-radius: 0% 100% 10% 100%; transform-origin: bottom left; transform: rotate(15deg); }
+
+        .flower-head { position: absolute; top: -48px; width: 50px; height: 60px; z-index: 3; }
+        .petal { position: absolute; bottom: 0; background: linear-gradient(to bottom, var(--f-color1), var(--f-color2)); box-shadow: inset 0 0 10px rgba(0,0,0,0.3); }
+        .petal-left   { left: 2px; width: 30px; height: 50px; border-radius: 50% 15% 15% 50%; transform: rotate(-15deg); z-index: 2; }
+        .petal-right  { right: 2px; width: 30px; height: 50px; border-radius: 15% 50% 50% 15%; transform: rotate(15deg); z-index: 2; }
+        .petal-center { left: 10px; width: 30px; height: 55px; border-radius: 50% 50% 20% 20%; z-index: 3; box-shadow: inset 0 12px 6px rgba(255,255,255,0.25), 0 0 6px rgba(0,0,0,0.4); }
+        .stigma { position: absolute; top: 5px; left: 21px; width: 8px; height: 15px; background: #ffeb96; border-radius: 50%; box-shadow: 0 0 12px var(--stigma-glow); z-index: 1; }
+
+        /* ==========================================
+           8. INTERACTIVIDAD: CORAZONES FLOTANTES
+           ========================================== */
+        .floating-heart {
+            position: absolute; pointer-events: none; width: 24px; height: 24px;
+            animation: floatUp 1.6s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; z-index: 200;
+        }
+
+        .floating-heart svg { width: 100%; height: 100%; fill: var(--active-heart-color); filter: drop-shadow(0 0 6px rgba(255,255,255,0.6)); }
+
+        @keyframes floatUp {
+            0%   { transform: translate(-50%, 0) scale(0.4); opacity: 1; }
+            50%  { transform: translate(calc(-50% + var(--drift)), -90px) scale(1.3); opacity: 0.9; }
+            100% { transform: translate(calc(-50% + var(--drift) * 2), -180px) scale(0.9); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="start-screen">
+        <div class="intro-card">
+            <h1>Un Jardín para Ti</h1>
+            <p>Toca el botón para revelar el ramo de tulipanes y encender la magia bajo las estrellas.</p>
+            <button class="animated-btn" id="enter-btn">
+                <span>Entrar al Jardín</span>
+                <span class="heart-beat">❤️</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="dedication-panel" id="dedication-panel">
+        <h2>Para mi ricitos bonitos</h2>
+        <p>Que cada uno de estos tulipanes te recuerde lo especial que eres. Hechos con código, pero cultivados con el corazón.</p>
+    </div>
+
+    <div class="stars-container" id="stars-container"></div>
+    <div class="shooting-stars-container">
+        <div class="shooting-star"></div>
+        <div class="shooting-star"></div>
+        <div class="shooting-star"></div>
+    </div>
+    <div class="fireflies-container" id="fireflies-container"></div>
+    <div class="moon"></div>
+
+    <audio id="bg-music" loop preload="auto">
+        <source src="cancion2.mp3" type="audio/mp3">
+    </audio>
+
+    <div id="garden-container">
+        <div class="bouquet" id="bouquet">
+            
+            <div class="ribbon-container">
+                <div class="ribbon-loop-left"></div>
+                <div class="ribbon-loop-right"></div>
+                <div class="ribbon-tail-left"></div>
+                <div class="ribbon-tail-right"></div>
+                <div class="ribbon-knot"></div>
+            </div>
+
+            <script>
+                for (let i = 1; i <= 15; i++) {
+                    document.write(`
+                    <div class="tulip-wrapper">
+                        <div class="flower-head">
+                            <div class="stigma"></div>
+                            <div class="petal petal-left"></div>
+                            <div class="petal petal-right"></div>
+                            <div class="petal petal-center"></div>
+                        </div>
+                        <div class="stem">
+                            <div class="leaf leaf-left"></div>
+                            <div class="leaf leaf-right"></div>
+                        </div>
+                    </div>
+                    `);
+                }
+            </script>
+        </div>
+    </div>
+
+    <script>
+        // Generar Estrellas
+        function createStars() {
+            const container = document.getElementById('stars-container');
+            const numStars = window.innerWidth < 600 ? 60 : 120; 
+            for (let i = 0; i < numStars; i++) {
+                const star = document.createElement('div');
+                star.classList.add('star');
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                const size = 1 + Math.random() * 2;
+                star.style.width = `${size}px`; star.style.height = `${size}px`;
+                star.style.animationDuration = `${1.5 + Math.random() * 4}s`;
+                star.style.animationDelay = `${Math.random() * 5}s`;
+                container.appendChild(star);
+            }
+        }
+
+        // Generar Luciérnagas
+        function createFireflies() {
+            const container = document.getElementById('fireflies-container');
+            const numFireflies = window.innerWidth < 600 ? 20 : 40;
+            for (let i = 0; i < numFireflies; i++) {
+                const firefly = document.createElement('div');
+                firefly.classList.add('firefly');
+                firefly.style.left = `${Math.random() * 100}%`;
+                firefly.style.top = `${Math.random() * 100}%`;
+                firefly.style.animationDuration = `${5 + Math.random() * 7}s`;
+                firefly.style.animationDelay = `${Math.random() * 5}s`;
+                container.appendChild(firefly);
+            }
+        }
+
+        let isMusicStarted = false;
+        const bgMusic = document.getElementById('bg-music');
+        const startScreen = document.getElementById('start-screen');
+        const enterBtn = document.getElementById('enter-btn');
+        const gardenContainer = document.getElementById('garden-container');
+        const dedicationPanel = document.getElementById('dedication-panel');
+
+        const svgHeart = `<svg viewBox="0 0 32 29.6"><path d="M23.6,0c-3.4,0-6.3,2.7-7.6,5.6C14.7,2.7,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,9.4,9.5,11.9,16,21.2c6.1-9.3,16-12.1,16-21.2C32,3.8,28.2,0,23.6,0z"/></svg>`;
+
+        // Evento de Entrada Principal
+        enterBtn.addEventListener('click', () => {
+            startScreen.classList.add('hidden');
+            gardenContainer.classList.add('active');
+
+            // Iniciar música
+            if (!isMusicStarted) {
+                bgMusic.play().then(() => { isMusicStarted = true; })
+                .catch((err) => console.log("Audio requiere interacción:", err));
+            }
+
+            // Temporizador para mostrar el mensaje secreto justo cuando el ramo termina de subir
+            setTimeout(() => {
+                dedicationPanel.classList.add('show');
+            }, 2000);
+        });
+
+        // Partículas al hacer clic
+        function handleTulipInteraction(event) {
+            const tulip = event.currentTarget;
+            const computedStyles = getComputedStyle(tulip);
+            const heartColor = computedStyles.getPropertyValue('--heart-color').trim() || '#ff4e8c';
+
+            const heart = document.createElement('div');
+            heart.classList.add('floating-heart');
+            heart.innerHTML = svgHeart;
+            heart.style.setProperty('--active-heart-color', heartColor);
+            
+            const drift = (Math.random() - 0.5) * 50; 
+            heart.style.setProperty('--drift', `${drift}px`);
+
+            const rect = tulip.querySelector('.flower-head').getBoundingClientRect();
+            heart.style.left = `${rect.left + (rect.width / 2)}px`;
+            heart.style.top = `${rect.top}px`;
+
+            document.body.appendChild(heart);
+            setTimeout(() => { heart.remove(); }, 1600);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            createStars();
+            createFireflies();
+            const tulips = document.querySelectorAll('.tulip-wrapper');
+            tulips.forEach(tulip => tulip.addEventListener('click', handleTulipInteraction));
+        });
+    </script>
+</body>
+</html>
